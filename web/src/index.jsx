@@ -1,6 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Teacher from "./components/Teacher";
+import Index from "./components/TeacherIndex";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 
-ReactDOM.createRoot(document.getElementById("root")).render(<Teacher />);
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Index />}></Route>
+    </Routes>
+  </BrowserRouter>
+);

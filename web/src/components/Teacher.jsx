@@ -34,7 +34,7 @@ const quiz = [
   },
 ];
 
-function Teacher() {
+function TeacherIndex() {
   const [socket, setSocket] = useState(null);
   const [students, setStudents] = useState([]);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -61,6 +61,7 @@ function Teacher() {
       );
     });
 
+    // 学生答题
     newSocket.on("student-answer", ({ qid, aid, uid }) => {
       setAnswers((answers) => {
         if (!answers[uid]) {
@@ -99,4 +100,4 @@ function Teacher() {
   );
 }
 
-export default Teacher;
+export default TeacherIndex;
