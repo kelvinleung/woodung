@@ -1,0 +1,15 @@
+.teacher-index__container {
+  min-height: 100vh;
+  background-color: #131313;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.teacher-index__button {
+  padding: 1rem 2rem;
+  color: #fff;
+  background-color: #3287ff;
+  border-radius: 0.5rem;
+  outline: none;
+  border: none;
+}
