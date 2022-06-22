@@ -1,30 +1,47 @@
 import { useState } from "react";
 import "./QuizEditor.css";
 
+const QUESTION_COLORS = ["red", "yellow", "blue", "green"];
+
 const QuestionList = ({
   questions,
   onAddQuestion,
   onSelectQuestion,
-  onSave,
+  onRemoveQuestion,
   activeId,
 }) => {
+  // 给数据添加 id 字段
+  const questionData = questions.map((q, id) => ({ ...q, id }));
   return (
     <aside className="quiz-editor__sidebar">
       <ul className="quiz-editor__sidebar-questions-container">
-        {questions.map((question) => (
+        {questionData.map((question) => (
           <li
             className={activeId === question.id ? "active" : undefined}
             key={question.id}
-            onClick={() => {
-              onSelectQuestion(question.id);
-            }}
           >
-            {question.description || "新题目"}
+            <div
+              className="quiz-editor__sidebar-question-card"
+              onClick={() => {
+                onSelectQuestion(question.id);
+              }}
+            >
+              {question.description || "新题目"}
+            </div>
+            <button
+              disabled={questions.length <= 1}
+              onClick={() => onRemoveQuestion(question.id)}
+            >
+              删除
+            </button>
           </li>
         ))}
       </ul>
-      <button onClick={onAddQuestion}>添加问题</button>
-      <button onClick={onSave}>保存问题</button>
+      <div className="quiz-editor__sidebar-question-button-container">
+        <button className="primary block" onClick={onAddQuestion}>
+          添加问题
+        </button>
+      </div>
     </aside>
   );
 };
@@ -35,26 +52,37 @@ const Question = ({
   onOptionsChange,
   onSetAnswer,
 }) => {
-  const options = [...question.options];
+  // 给数据添加 id 字段
+  const options = [...question.options].map((content, id) => ({ id, content }));
   const changeOptions = (val, id) => {
-    options[id] = { id, content: val };
-    onOptionsChange(options);
+    onOptionsChange(val, id);
+    // 清除正确答案
+    if (!val && question.answerId === id) {
+      onSetAnswer(-1);
+    }
   };
   const setAnswer = (id) => {
     onSetAnswer(id);
   };
   return (
-    <main className="quiz-editor__main">
-      <input
-        className="quiz-edtior__desription-input"
-        type="text"
-        placeholder="请输入问题"
-        value={question.description}
-        onChange={(e) => onDescriptionChange(e.target.value)}
-      />
+    <section className="quiz-editor__main">
+      <div className="quiz-edtior__desription-container">
+        <input
+          className="quiz-edtior__desription-input"
+          type="text"
+          placeholder="请输入问题"
+          value={question.description}
+          onChange={(e) => onDescriptionChange(e.target.value)}
+        />
+      </div>
       <ul className="quiz-editor__options-container">
         {options.map((option) => (
-          <li className="quiz-editor__option-wrapper" key={option.id}>
+          <li
+            className={`quiz-editor__option-wrapper${
+              " " + QUESTION_COLORS[option.id]
+            }${option.content ? " filled" : ""}`}
+            key={option.id}
+          >
             <input
               type="text"
               placeholder="请输入答案"
@@ -68,21 +96,15 @@ const Question = ({
           </li>
         ))}
       </ul>
-    </main>
+    </section>
   );
 };
 
 const QuizEditor = () => {
   const [questions, setQuestions] = useState([
     {
-      id: 0,
       description: "",
-      options: [
-        { id: 0, content: "" },
-        { id: 1, content: "" },
-        { id: 2, content: "" },
-        { id: 3, content: "" },
-      ],
+      options: ["", "", "", ""],
       answerId: -1,
     },
   ]);
@@ -94,9 +116,9 @@ const QuizEditor = () => {
     setQuestions(newQuestions);
   };
   // 修改选项
-  const updateOptions = (options) => {
+  const updateOptions = (val, id) => {
     const newQuestions = [...questions];
-    newQuestions[activeId].options = options;
+    newQuestions[activeId].options[id] = val;
     setQuestions(newQuestions);
   };
   // 设置答案
@@ -108,38 +130,55 @@ const QuizEditor = () => {
   // 添加问题
   const addQuestion = () => {
     const newQuestion = {
-      id: questions.length,
       description: "",
-      options: [
-        { id: 0, content: "" },
-        { id: 1, content: "" },
-        { id: 2, content: "" },
-        { id: 3, content: "" },
-      ],
+      options: ["", "", "", ""],
       answerId: -1,
     };
+    // 切换到新增的问题
+    setActiveId(questions.length);
     setQuestions([...questions, newQuestion]);
   };
-  // 选择题目
+  // 移除问题
+  const removeQuestion = (id) => {
+    const newQuestions = [...questions];
+    if (id === activeId) {
+      setActiveId(id - 1);
+    }
+    newQuestions.splice(id, 1);
+    setQuestions(newQuestions);
+  };
+  // 选择问题
   const selectQuestion = (id) => {
     setActiveId(id);
   };
   const currentQuestion = questions[activeId];
   return (
     <div className="quiz-editor__container">
-      <QuestionList
-        questions={questions}
-        onAddQuestion={addQuestion}
-        onSelectQuestion={selectQuestion}
-        onSave={() => console.log(questions)}
-        activeId={activeId}
-      />
-      <Question
-        question={currentQuestion}
-        onDescriptionChange={updateDescription}
-        onOptionsChange={updateOptions}
-        onSetAnswer={updateAnswer}
-      />
+      <header className="quiz-editor__header">
+        <input
+          className="quiz-editor__header-input"
+          type="text"
+          placeholder="请输入游戏名称"
+        />
+        <button className="primary" onClick={() => console.log(questions)}>
+          保存游戏
+        </button>
+      </header>
+      <main className="quiz-editor__content-container">
+        <QuestionList
+          questions={questions}
+          onAddQuestion={addQuestion}
+          onSelectQuestion={selectQuestion}
+          onRemoveQuestion={removeQuestion}
+          activeId={activeId}
+        />
+        <Question
+          question={currentQuestion}
+          onDescriptionChange={updateDescription}
+          onOptionsChange={updateOptions}
+          onSetAnswer={updateAnswer}
+        />
+      </main>
     </div>
   );
 };

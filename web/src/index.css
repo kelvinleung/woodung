@@ -17,4 +17,27 @@ button {
   background: none;
   border: none;
   outline: none;
+  cursor: pointer;
+}
+button.primary {
+  padding: 1rem 2rem;
+  background-color: #145dc7;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 0.5rem;
+}
+button.block {
+  display: block;
+  width: 100%;
+}
+input {
+  color: inherit;
+  font-size: inherit;
+}
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #aaa;
+  opacity: 1; /* Firefox */
+}
+:-ms-input-placeholder, ::-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #aaa;
 }
