@@ -14,6 +14,7 @@ const QuestionList = ({
   const questionData = questions.map((q, id) => ({ ...q, id }));
   return (
     <aside className="quiz-editor__sidebar">
+      <div className="quiz-editor__sidebar-questions-count">{`共 ${questionData.length} 道题目`}</div>
       <ul className="quiz-editor__sidebar-questions-container">
         {questionData.map((question) => (
           <li

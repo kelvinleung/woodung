@@ -28,7 +28,7 @@
 }
 .quiz-editor__sidebar {
   width: 260px;
-  padding: 1rem 0;
+  padding: 0 0 1rem 0;
   border-right: 1px solid #eee;
   overflow: auto;
 }
@@ -148,4 +148,10 @@
 }
 .quiz-editor__sidebar-question-button-container {
   padding: 0 1rem;
+}
+.quiz-editor__sidebar-questions-count {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #eee;
 }
