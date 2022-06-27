@@ -1,48 +1,19 @@
+require("dotenv").config();
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const configureSocket = require("./socket");
+const routes = require("./routes");
 
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+configureSocket(server);
 
-io.on("connection", (socket) => {
-  console.log(`new connection: ${socket.id}`);
+// 解析 x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use("/api/v1", routes);
 
-  // 断开连接
-  socket.on("disconnect", () => {
-    console.log(`disconect: ${socket.id}`);
-  });
-
-  // ------ 老师端
-
-  // 创建房间
-  socket.on("open-room", (roomId) => {
-    socket.join(roomId);
-  });
-
-  // 出题
-  socket.on("question", (question) => {
-    socket.broadcast.emit("new-question", question);
-  });
-
-  // ------ 学生端
-
-  // 加入房间
-  socket.on("join-room", ({ roomId, name }) => {
-    socket.join(roomId);
-    socket.to(roomId).emit("student-join-room", { id: socket.id, name });
-  });
-
-  // 答题
-  socket.on("answer", ({ roomId, answer }) => {
-    socket.to(roomId).emit("student-answer", { ...answer, uid: socket.id });
-  });
-});
-
-io.of("/").adapter.on("leave-room", (roomId, id) => {
-  io.to(roomId).emit("student-leave-room", id);
-});
-
-server.listen(4399, () => console.log("running..."));
+app.listen(process.env.PORT, () =>
+  console.log(`running @ ${process.env.PORT}`)
+);
