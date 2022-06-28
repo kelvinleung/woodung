@@ -7,50 +7,58 @@ const sequelize = new Sequelize(
   { host: "localhost", dialect: "mysql" }
 );
 
-const User = sequelize.define("user", {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    allowNull: false,
-    primaryKey: true,
+const User = sequelize.define(
+  "user",
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+      primaryKey: true,
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    salt: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  salt: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
+  { paranoid: true }
+);
 
-const Quiz = sequelize.define("quiz", {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    allowNull: false,
-    primaryKey: true,
+const Quiz = sequelize.define(
+  "quiz",
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.JSON,
+      allowNull: false,
+    },
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  content: {
-    type: DataTypes.JSON,
-    allowNull: false,
-  },
-});
+  { paranoid: true }
+);
 
 (async () => {
   try {
     await sequelize.authenticate();
     console.log("Database connected");
-    await sequelize.sync();
+    // await sequelize.sync();
   } catch (err) {
     console.log("Error establishing a database connection");
   }
