@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
+const TOKEN_EXPIRE_TIME = 600;
+
 router.post("/", async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -17,8 +19,14 @@ router.post("/", async (req, res) => {
         .pbkdf2Sync(password, salt, 310000, 32, "sha256")
         .toString("hex");
       if (user.password === hashedPassword) {
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-        return res.json({ message: "Login successfully", token });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+          expiresIn: TOKEN_EXPIRE_TIME,
+        });
+        return res.json({
+          code: 0,
+          message: "Login successfully",
+          token,
+        });
       } else {
         return res.json({ message: "User or password incorrect" });
       }

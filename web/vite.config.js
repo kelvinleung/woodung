@@ -25,6 +25,7 @@ export default defineConfig({
         target: "http://localhost:4399",
         ws: true,
       },
+      "/api": "http://localhost:4399",
     },
   },
 });

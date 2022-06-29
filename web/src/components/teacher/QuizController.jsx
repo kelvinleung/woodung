@@ -34,7 +34,7 @@ const quiz = [
   },
 ];
 
-function TeacherIndex() {
+function QuizController() {
   const [socket, setSocket] = useState(null);
   const [students, setStudents] = useState([]);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -100,4 +100,4 @@ function TeacherIndex() {
   );
 }
 
-export default TeacherIndex;
+export default QuizController;
