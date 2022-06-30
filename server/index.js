@@ -3,7 +3,6 @@ const express = require("express");
 const http = require("http");
 const configureSocket = require("./socket");
 const routes = require("./routes");
-require("./auth");
 
 const app = express();
 const server = http.createServer(app);
