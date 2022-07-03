@@ -1,107 +1,14 @@
 import { useState } from "react";
-import "./QuizEditor.css";
+import { useAuth } from "../../hooks/useAuth";
+import Navbar from "./Navbar";
+import QuestionContent from "./QuestionContent";
+import QuestionList from "./QuestionList";
+import axios from "axios";
 
-const QUESTION_COLORS = ["red", "yellow", "blue", "green"];
-
-const QuestionList = ({
-  questions,
-  onAddQuestion,
-  onSelectQuestion,
-  onRemoveQuestion,
-  activeId,
-}) => {
-  // 给数据添加 id 字段
-  const questionData = questions.map((q, id) => ({ ...q, id }));
-  return (
-    <aside className="quiz-editor__sidebar">
-      <div className="quiz-editor__sidebar-questions-count">{`共 ${questionData.length} 道题目`}</div>
-      <ul className="quiz-editor__sidebar-questions-container">
-        {questionData.map((question) => (
-          <li
-            className={activeId === question.id ? "active" : undefined}
-            key={question.id}
-          >
-            <div
-              className="quiz-editor__sidebar-question-card"
-              onClick={() => {
-                onSelectQuestion(question.id);
-              }}
-            >
-              {question.description || "新题目"}
-            </div>
-            <button
-              disabled={questions.length <= 1}
-              onClick={() => onRemoveQuestion(question.id)}
-            >
-              删除
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="quiz-editor__sidebar-question-button-container">
-        <button className="primary block" onClick={onAddQuestion}>
-          添加问题
-        </button>
-      </div>
-    </aside>
-  );
-};
-
-const Question = ({
-  question,
-  onDescriptionChange,
-  onOptionsChange,
-  onSetAnswer,
-}) => {
-  // 给数据添加 id 字段
-  const options = [...question.options].map((content, id) => ({ id, content }));
-  const changeOptions = (val, id) => {
-    onOptionsChange(val, id);
-    // 清除正确答案
-    if (!val && question.answerId === id) {
-      onSetAnswer(-1);
-    }
-  };
-  const setAnswer = (id) => {
-    onSetAnswer(id);
-  };
-  return (
-    <section className="quiz-editor__main">
-      <div className="quiz-edtior__desription-container">
-        <input
-          className="quiz-edtior__desription-input"
-          type="text"
-          placeholder="请输入问题"
-          value={question.description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
-        />
-      </div>
-      <ul className="quiz-editor__options-container">
-        {options.map((option) => (
-          <li
-            className={`quiz-editor__option-wrapper${
-              " " + QUESTION_COLORS[option.id]
-            }${option.content ? " filled" : ""}`}
-            key={option.id}
-          >
-            <input
-              type="text"
-              placeholder="请输入答案"
-              value={option.content}
-              onChange={(e) => changeOptions(e.target.value, option.id)}
-            />
-            <button
-              className={question.answerId === option.id ? "active" : undefined}
-              onClick={() => setAnswer(option.id)}
-            ></button>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-};
+const CREATE_QUIZ_URL = "/api/v1/quiz/create";
 
 const QuizEditor = () => {
+  const [name, setName] = useState("");
   const [questions, setQuestions] = useState([
     {
       description: "",
@@ -110,6 +17,19 @@ const QuizEditor = () => {
     },
   ]);
   const [activeId, setActiveId] = useState(0);
+  const { user } = useAuth();
+
+  const createQuiz = async () => {
+    console.log(questions);
+    const { id, token } = user;
+    const response = await axios.post(
+      CREATE_QUIZ_URL,
+      { id, name, content: questions },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log(response.data);
+  };
+
   // 修改题目描述
   const updateDescription = (val) => {
     const newQuestions = [...questions];
@@ -154,18 +74,23 @@ const QuizEditor = () => {
   };
   const currentQuestion = questions[activeId];
   return (
-    <div className="quiz-editor__container">
-      <header className="quiz-editor__header">
+    <>
+      <Navbar>
         <input
-          className="quiz-editor__header-input"
+          className="px-4 mr-4 w-[360px] bg-slate-100 rounded-md outline-none"
           type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="请输入游戏名称"
         />
-        <button className="primary" onClick={() => console.log(questions)}>
+        <button
+          className="px-6 flex flex-shrink-0 items-center cursor-pointer rounded-md text-white text-sm bg-sky-500"
+          onClick={createQuiz}
+        >
           保存游戏
         </button>
-      </header>
-      <main className="quiz-editor__content-container">
+      </Navbar>
+      <main className="pt-20 flex h-screen min-w-[1080px] bg-slate-50 overflow-hidden">
         <QuestionList
           questions={questions}
           onAddQuestion={addQuestion}
@@ -173,14 +98,14 @@ const QuizEditor = () => {
           onRemoveQuestion={removeQuestion}
           activeId={activeId}
         />
-        <Question
+        <QuestionContent
           question={currentQuestion}
           onDescriptionChange={updateDescription}
           onOptionsChange={updateOptions}
           onSetAnswer={updateAnswer}
         />
       </main>
-    </div>
+    </>
   );
 };
 

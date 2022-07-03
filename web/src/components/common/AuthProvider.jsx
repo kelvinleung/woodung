@@ -7,6 +7,7 @@ const AuthProvider = ({ children }) => {
   function getUser() {
     let token = localStorage.getItem("access_token");
     if (token) {
+      // 解析 JTW，判断是否已过期
       const { id, exp } = JSON.parse(window.atob(token.split(".")[1]));
       if (exp * 1000 > Date.now()) {
         return { id, token };
