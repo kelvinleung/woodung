@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "../../hooks/useAuth";
-import axios from "axios";
+import request from "../../common/api";
 import { useState } from "react";
 
 const QuizList = () => {
@@ -10,12 +10,10 @@ const QuizList = () => {
   const { user } = useAuth();
 
   async function getQuizs() {
-    const response = await axios.get("/api/v1/quiz/all", {
+    const response = await request.get("/quiz/all", {
       headers: { Authorization: `Bearer ${user.token}` },
     });
-    if (response.data.code === 0) {
-      setQuizs(response.data.data);
-    }
+    setQuizs(response.data);
   }
 
   useEffect(() => {
