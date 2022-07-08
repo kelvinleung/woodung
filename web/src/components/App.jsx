@@ -8,8 +8,9 @@ const App = () => (
   <Routes>
     <Route path="/" element={<Login />}></Route>
     <Route element={<ProtectedRoute />}>
-      <Route path="/editor" element={<QuizEditor />}></Route>
-      <Route path="/quiz-list" element={<QuizList />}></Route>
+      <Route path="/quiz/create" element={<QuizEditor />}></Route>
+      <Route path="/quiz/edit/:id" element={<QuizEditor />}></Route>
+      <Route path="/quizzes" element={<QuizList />}></Route>
     </Route>
   </Routes>
 );

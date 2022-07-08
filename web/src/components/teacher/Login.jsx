@@ -1,16 +1,16 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useEffect } from "react";
-
-const LOGIN_URL = "/api/v1/login";
-const HOME_URL = "/quiz-list";
+import { HOME_URL, API_LOGIN_URL } from "../../common/constants";
 
 const Index = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectURL = (location.state && location.state.from) || HOME_URL;
   const { user, saveUser } = useAuth();
 
   useEffect(() => {
@@ -22,10 +22,10 @@ const Index = () => {
   async function login(e) {
     e.preventDefault();
     try {
-      const response = await axios.post(LOGIN_URL, { username, password });
+      const response = await axios.post(API_LOGIN_URL, { username, password });
       if (response.data.code === 0) {
         saveUser(response.data.token);
-        navigate(HOME_URL);
+        navigate(redirectURL);
       }
     } catch (err) {
       console.log(err);

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { AuthContext } from "../../hooks/useAuth";
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(getUser());
+  const location = useLocation();
 
   function getUser() {
     let token = localStorage.getItem("access_token");
@@ -26,7 +28,7 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     setUser(getUser());
-  }, []);
+  }, [location]);
 
   return (
     <AuthContext.Provider value={{ user, saveUser }}>

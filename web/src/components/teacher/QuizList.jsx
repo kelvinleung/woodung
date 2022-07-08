@@ -4,27 +4,28 @@ import Navbar from "./Navbar";
 import { useAuth } from "../../hooks/useAuth";
 import request from "../../common/api";
 import { useState } from "react";
+import { API_GET_QUIZZES_URL, CREATE_QUIZ_URL } from "../../common/constants";
 
 const QuizList = () => {
   const [quizs, setQuizs] = useState([]);
   const { user } = useAuth();
 
-  async function getQuizs() {
-    const response = await request.get("/quiz/all", {
+  async function getQuizzes() {
+    const response = await request.get(API_GET_QUIZZES_URL, {
       headers: { Authorization: `Bearer ${user.token}` },
     });
     setQuizs(response.data);
   }
 
   useEffect(() => {
-    getQuizs();
+    getQuizzes();
   }, []);
 
   return (
     <>
       <Navbar>
         <Link
-          to={"/editor"}
+          to={CREATE_QUIZ_URL}
           className="px-6 flex items-center cursor-pointer rounded-md text-white text-sm bg-sky-500"
         >
           创建新游戏

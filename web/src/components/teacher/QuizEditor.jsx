@@ -4,8 +4,7 @@ import Navbar from "./Navbar";
 import QuestionContent from "./QuestionContent";
 import QuestionList from "./QuestionList";
 import axios from "axios";
-
-const CREATE_QUIZ_URL = "/api/v1/quiz/create";
+import { API_CREATE_QUIZ_URL } from "../../common/constants";
 
 const QuizEditor = () => {
   const [name, setName] = useState("");
@@ -23,7 +22,7 @@ const QuizEditor = () => {
     console.log(questions);
     const { id, token } = user;
     const response = await axios.post(
-      CREATE_QUIZ_URL,
+      API_CREATE_QUIZ_URL,
       { id, name, content: questions },
       { headers: { Authorization: `Bearer ${token}` } }
     );
