@@ -1,5 +1,6 @@
 const express = require("express");
-const { Quiz } = require("../db");
+const { Quiz } = require("../models");
+const Codes = require("../common/codes");
 
 const router = express.Router();
 
@@ -7,21 +8,35 @@ router.post("/create", async (req, res) => {
   const { name, content } = req.body;
   try {
     const quiz = await Quiz.create({ name, content });
-    if (quiz) {
-      return res.json({
-        code: 0,
-        message: "Quiz created successfully",
-        id: quiz.id,
-      });
-    } else {
-      throw new Error("Error creating quiz");
-    }
+    return res.json({
+      ...Codes.Quiz.CREATE_SUCCESS,
+      data: { id: quiz.id },
+    });
   } catch (err) {
-    res.json({ code: 3000, message: err.message || "Error creating quiz" });
+    res.json({ ...Codes.Quiz.CREATE_ERROR });
   }
 });
 
-router.post("/edit", async (req, res) => {
+router.delete("/delete", async (req, res) => {
+  const { id } = req.query;
+  try {
+    const count = await Quiz.destroy({ where: { id } });
+    if (count === 1) {
+      return res.json({
+        ...Codes.Quiz.DELETE_SUCCESS,
+        data: {
+          id,
+        },
+      });
+    } else {
+      return res.json({ ...Codes.Quiz.DELETE_NOT_FOUND });
+    }
+  } catch (err) {
+    res.json({ ...Codes.Quiz.DELETE_ERROR });
+  }
+});
+
+router.post("/update", async (req, res) => {
   const { id } = req.query;
   const { name, content } = req.body;
   try {
@@ -29,21 +44,16 @@ router.post("/edit", async (req, res) => {
       { name, content },
       { where: { id } }
     );
-    console.log(id, updateResult);
     if (updateResult[0] === 1) {
       return res.json({
-        code: 0,
-        message: "Quiz updated successfully",
-        id,
+        ...Codes.Quiz.UPDATE_SUCCESS,
+        data: { id },
       });
     } else {
-      throw new Error("Quiz not found");
+      return res.json({ ...Codes.Quiz.UPDATE_NOT_FOUND });
     }
   } catch (err) {
-    res.json({
-      code: 3000,
-      message: err.message || "Error updating quiz",
-    });
+    res.json({ ...Codes.Quiz.UPDATE_ERROR });
   }
 });
 
@@ -53,23 +63,23 @@ router.get("/", async (req, res) => {
     const quiz = await Quiz.findOne({ where: { id } });
     if (quiz) {
       return res.json({
-        code: 0,
-        data: quiz,
+        ...Codes.Quiz.GET_BY_ID_SUCCESS,
+        data: { quiz },
       });
     } else {
-      throw new Error("Quiz not found");
+      return res.json({ ...Codes.Quiz.GET_BY_ID_NOT_FOUND });
     }
   } catch (err) {
-    res.json({ code: 3000, message: err.message || "Error getting quiz" });
+    res.json({ ...Codes.Quiz.GET_BY_ID_ERROR });
   }
 });
 
 router.get("/all", async (req, res) => {
   try {
     const quizzes = await Quiz.findAll();
-    return res.json({ code: 0, data: quizzes });
+    return res.json({ ...Codes.Quiz.GET_ALL_SUCCESS, data: { quizzes } });
   } catch (err) {
-    res.json({ code: 3000, message: "Error getting all quizzes" });
+    res.json({ ...Codes.Quiz.GET_ALL_ERROR });
   }
 });
 

@@ -1,18 +1,19 @@
 const express = require("express");
-const { User } = require("../db");
+const { User } = require("../models");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const Codes = require("../common/codes");
 
 const router = express.Router();
 
-const TOKEN_EXPIRE_TIME = 600;
+const TOKEN_EXPIRE_TIME = 3000;
 
 router.post("/", async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ where: { username } });
     if (!user) {
-      return res.json({ message: "User or password incorrect" });
+      return res.json({ ...Codes.Login.USER_PASSWORD_INCORRECT });
     } else {
       const salt = user.salt;
       const hashedPassword = crypto
@@ -23,16 +24,14 @@ router.post("/", async (req, res) => {
           expiresIn: TOKEN_EXPIRE_TIME,
         });
         return res.json({
-          code: 0,
-          message: "Login successfully",
-          token,
+          ...Codes.Login.LOGIN_SUCCESS,
+          data: { token },
         });
       } else {
-        return res.json({ message: "User or password incorrect" });
+        return res.json({ ...Codes.Login.USER_PASSWORD_INCORRECT });
       }
     }
   } catch (err) {
-    console.log(err);
     return res.json({ message: "Unknown error" });
   }
 });
