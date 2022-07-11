@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api/v1", routes);
 
-app.listen(process.env.PORT, () =>
+// 让 http server 来监听，否则 socket.io 收不到
+server.listen(process.env.PORT, () =>
   console.log(`running @ ${process.env.PORT}`)
 );

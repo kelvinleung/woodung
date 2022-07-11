@@ -8,7 +8,7 @@ const Navbar = ({ children }) => {
         to={LOGIN_URL}
         className="px-4 mr-4 flex items-center cursor-pointer text-sky-500 text-lg font-bold"
       >
-        Woodong
+        WOODONG
       </Link>
       <section className="flex">{children}</section>
     </header>

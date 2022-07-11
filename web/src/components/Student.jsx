@@ -7,7 +7,7 @@ import { io } from "socket.io-client";
 */
 
 // TODO: 输入房间号加入
-const roomId = "zwowH3wix";
+const roomId = "ca5a96f5-3c75-4af3-b66a-fa1eefde3604";
 
 function Student() {
   const [name, setName] = useState();
@@ -41,14 +41,14 @@ function Student() {
         <div>
           <p>{question.question}</p>
           <div>
-            {question.answers.map((answer) => (
+            {question.options.map((option) => (
               <button
-                key={answer.id}
+                key={option.id}
                 onClick={() =>
-                  answerQuestion({ qid: question.id, aid: answer.id })
+                  answerQuestion({ qid: question.id, aid: option.id })
                 }
               >
-                {answer.text}
+                {option.text}
               </button>
             ))}
           </div>

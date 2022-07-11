@@ -24,7 +24,7 @@ const Index = () => {
     try {
       const response = await axios.post(API_LOGIN_URL, { username, password });
       if (response.data.code === 0) {
-        saveUser(response.data.token);
+        saveUser(response.data.data.token);
         navigate(redirectURL);
       }
     } catch (err) {

@@ -4,17 +4,22 @@ import Navbar from "./Navbar";
 import { useAuth } from "../../hooks/useAuth";
 import request from "../../common/api";
 import { useState } from "react";
-import { API_GET_QUIZZES_URL, CREATE_QUIZ_URL } from "../../common/constants";
+import {
+  API_GET_QUIZZES_URL,
+  CREATE_QUIZ_URL,
+  EDIT_QUIZ_URL,
+  QUIZ_CONTROLLER_URL,
+} from "../../common/constants";
 
 const QuizList = () => {
-  const [quizs, setQuizs] = useState([]);
+  const [quizs, setQuizzess] = useState([]);
   const { user } = useAuth();
 
   async function getQuizzes() {
     const response = await request.get(API_GET_QUIZZES_URL, {
       headers: { Authorization: `Bearer ${user.token}` },
     });
-    setQuizs(response.data);
+    setQuizzess(response.data.quizzes);
   }
 
   useEffect(() => {
@@ -43,12 +48,18 @@ const QuizList = () => {
                 <p className="text-neutral-400 font-thin text-sm">{`共 ${quiz.content.length} 题`}</p>
               </section>
               <section className="flex flex-col gap-4 justify-between">
-                <button className="px-4 py-2 rounded-md bg-sky-50 text-sky-500 text-sm">
+                <Link
+                  to={`${QUIZ_CONTROLLER_URL}/${quiz.id}`}
+                  className="px-4 py-2 rounded-md bg-sky-50 text-sky-500 text-sm"
+                >
                   开始游戏
-                </button>
-                <button className="px-4 py-2 rounded-md bg-slate-50 text-slate-500 text-sm">
+                </Link>
+                <Link
+                  to={`${EDIT_QUIZ_URL}/${quiz.id}`}
+                  className="px-4 py-2 rounded-md bg-slate-50 text-slate-500 text-sm"
+                >
                   编辑游戏
-                </button>
+                </Link>
               </section>
             </li>
           ))}

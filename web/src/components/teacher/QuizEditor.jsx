@@ -1,10 +1,16 @@
-import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import request from "../../common/api";
 import Navbar from "./Navbar";
 import QuestionContent from "./QuestionContent";
 import QuestionList from "./QuestionList";
-import axios from "axios";
-import { API_CREATE_QUIZ_URL } from "../../common/constants";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  API_CREATE_QUIZ_URL,
+  API_UPDATE_QUIZ_URL,
+  API_GET_QUIZ_URL,
+} from "../../common/constants";
 
 const QuizEditor = () => {
   const [name, setName] = useState("");
@@ -17,16 +23,42 @@ const QuizEditor = () => {
   ]);
   const [activeId, setActiveId] = useState(0);
   const { user } = useAuth();
+  const { id: editId } = useParams();
+
+  async function getQuizById() {
+    const response = await request.get(API_GET_QUIZ_URL, {
+      headers: { Authorization: `Bearer ${user.token}` },
+      params: { id: editId },
+    });
+    const { name, content } = response.data.quiz;
+    setName(name);
+    setQuestions(content);
+  }
+
+  useEffect(() => {
+    if (editId) {
+      getQuizById();
+    }
+  }, [editId]);
 
   const createQuiz = async () => {
-    console.log(questions);
     const { id, token } = user;
     const response = await axios.post(
       API_CREATE_QUIZ_URL,
       { id, name, content: questions },
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
-    console.log(response.data);
+  };
+
+  const updateQuiz = async () => {
+    const { id, token } = user;
+    const response = await axios.post(
+      API_UPDATE_QUIZ_URL,
+      { id, name, content: questions },
+      { headers: { Authorization: `Bearer ${token}` }, params: { id: editId } }
+    );
   };
 
   // 修改题目描述
@@ -83,8 +115,8 @@ const QuizEditor = () => {
           placeholder="请输入游戏名称"
         />
         <button
-          className="px-6 flex flex-shrink-0 items-center cursor-pointer rounded-md text-white text-sm bg-sky-500"
-          onClick={createQuiz}
+          className="px-6 flex flex-shrink-0 items-center rounded-md text-white text-sm bg-sky-500"
+          onClick={editId ? updateQuiz : createQuiz}
         >
           保存游戏
         </button>
