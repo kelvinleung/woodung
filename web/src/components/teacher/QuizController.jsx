@@ -86,11 +86,7 @@ const QuizController = () => {
   const step = () => {
     const nextIndex = index + 1;
     if (nextIndex >= questions.length) return;
-    const { description, options } = questions[nextIndex];
-    const nextQuestion = {
-      description,
-      options: options.map((o, i) => ({ id: i, text: o })),
-    };
+    const nextQuestion = questions[nextIndex];
     socket.emit("question", nextQuestion);
     setIndex(nextIndex);
   };

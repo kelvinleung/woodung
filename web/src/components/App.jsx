@@ -4,6 +4,7 @@ import ProtectedRoute from "./common/ProtectedRoute";
 import QuizEditor from "./teacher/QuizEditor";
 import QuizList from "./teacher/QuizList";
 import QuizController from "./teacher/QuizController";
+import Room from "./student/Room";
 
 const App = () => (
   <Routes>
@@ -14,6 +15,8 @@ const App = () => (
       <Route path="/quizzes" element={<QuizList />}></Route>
       <Route path="/quiz/controller/:id" element={<QuizController />}></Route>
     </Route>
+    <Route path="/room/:rid" element={<Room />}></Route>
+    <Route path="*" element={<p>Not Found</p>}></Route>
   </Routes>
 );
 

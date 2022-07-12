@@ -15,7 +15,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(root, "index.html"),
-        room: resolve(root, "room/index.html"),
       },
     },
   },

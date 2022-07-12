@@ -12,15 +12,22 @@ import {
   API_GET_QUIZ_URL,
 } from "../../common/constants";
 
+function generateQuestion() {
+  return {
+    description: "",
+    options: [
+      { id: 0, text: "", color: "#de1a35" },
+      { id: 1, text: "", color: "#d29400" },
+      { id: 2, text: "", color: "#145dc7" },
+      { id: 3, text: "", color: "#227e0f" },
+    ],
+    answerId: -1,
+  };
+}
+
 const QuizEditor = () => {
   const [name, setName] = useState("");
-  const [questions, setQuestions] = useState([
-    {
-      description: "",
-      options: ["", "", "", ""],
-      answerId: -1,
-    },
-  ]);
+  const [questions, setQuestions] = useState([generateQuestion()]);
   const [activeId, setActiveId] = useState(0);
   const { user } = useAuth();
   const { id: editId } = useParams();
@@ -70,7 +77,7 @@ const QuizEditor = () => {
   // 修改选项
   const updateOptions = (val, id) => {
     const newQuestions = [...questions];
-    newQuestions[activeId].options[id] = val;
+    newQuestions[activeId].options[id].text = val;
     setQuestions(newQuestions);
   };
   // 设置答案
@@ -81,14 +88,9 @@ const QuizEditor = () => {
   };
   // 添加问题
   const addQuestion = () => {
-    const newQuestion = {
-      description: "",
-      options: ["", "", "", ""],
-      answerId: -1,
-    };
     // 切换到新增的问题
     setActiveId(questions.length);
-    setQuestions([...questions, newQuestion]);
+    setQuestions([...questions, generateQuestion()]);
   };
   // 移除问题
   const removeQuestion = (id) => {
@@ -103,6 +105,7 @@ const QuizEditor = () => {
   const selectQuestion = (id) => {
     setActiveId(id);
   };
+
   const currentQuestion = questions[activeId];
   return (
     <>
