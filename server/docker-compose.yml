@@ -1,0 +1,20 @@
+version: "3.0"
+services:
+  db:
+    environment:
+      MYSQL_ROOT_PASSWORD: "10086"
+      TZ: "Asia/Shanghai"
+    image: "mysql:latest"
+    container_name: woodong-db
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    restart: always
+    privileged: true
+    volumes:
+      - "./db/store:/var/lib/mysql"
+      - "./db:/docker-entrypoint-initdb.d/"
+    ports:
+      - "3306:3306"
