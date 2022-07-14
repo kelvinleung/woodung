@@ -32,12 +32,12 @@ const QuestionContent = ({
       <ul className="grid grid-cols-2 gap-4">
         {options.map((option) => (
           <li
-            className={[
-              "p-4 flex items-center rounded-md",
-              `border-l-4 border-[${option.color}]`,
-              option.text ? `bg-[${option.color}]` : "bg-white",
-            ].join(" ")}
             key={option.id}
+            className="p-4 flex items-center rounded-md border-l-4"
+            style={{
+              borderColor: option.color,
+              backgroundColor: option.text ? option.color : "#fff",
+            }}
           >
             <input
               className={[
