@@ -1,7 +1,7 @@
 const { Server } = require("socket.io");
 const { randomBytes } = require("crypto");
 const sessionMiddleware = require("../middlewares/session");
-const dataStore = require("../common/sessionStore");
+const dataStore = require("../common/dataStore");
 
 const configureSocket = (server) => {
   const io = new Server(server);
