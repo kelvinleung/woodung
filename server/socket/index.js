@@ -1,11 +1,7 @@
 const { Server } = require("socket.io");
 const { randomBytes } = require("crypto");
 const sessionMiddleware = require("../middlewares/session");
-const SessionStore = require("../common/sessionStore");
-const RoomStore = require("../common/roomStore");
-
-const sessionStore = new SessionStore();
-const roomStore = new RoomStore();
+const dataStore = require("../common/sessionStore");
 
 const configureSocket = (server) => {
   const io = new Server(server);
@@ -33,11 +29,11 @@ const configureSocket = (server) => {
     if (role === "teacher") {
       const { userId } = socket;
 
-      // TODO: 处理 roomId 逻辑
-      let roomId = roomStore.findRoomId(userId);
+      // 处理 roomId 逻辑
+      let roomId = dataStore.findRoomId(userId);
       if (!roomId) {
         roomId = randomBytes(4).toString("hex").toUpperCase();
-        roomStore.saveRoom(roomId, userId);
+        dataStore.saveRoom(roomId, userId);
       }
 
       // 创建房间
@@ -55,34 +51,34 @@ const configureSocket = (server) => {
     if (role === "student") {
       const { sessionId, username } = socket;
 
-      // 保存 session
-      sessionStore.saveSession(socket.sessionId, {
-        userId,
-        username,
-        role,
-      });
-
-      // 返回 session 信息
-      socket.emit("session", {
-        sessionId,
-        username,
-      });
-
       // 加入到 userId 的房间（方便直接发信息）
       socket.join(userId);
 
       // 加入房间
       socket.on("join_room", (roomId, callback) => {
-        if (!roomStore.findTeacherId(roomId)) {
+        // 判断房间是否存在
+        if (!dataStore.findTeacherId(roomId)) {
           callback({ code: 1000, message: "Room not found." });
           return;
         }
+
+        // 加入房间
         socket.join(roomId);
         socket.roomId = roomId;
+
+        // 保存 session
+        dataStore.saveSession(socket.sessionId, {
+          userId,
+          username,
+        });
+
+        // 发送已加入房间消息
         socket
           .to(roomId)
           .emit("student_join_room", { id: userId, name: username });
-        callback({ code: 0, message: "OK." });
+
+        // 返回 sessionId
+        callback({ code: 0, message: "OK.", data: { sessionId, username } });
       });
 
       // 答题

@@ -53,18 +53,22 @@ const QuestionState = ({ question }) => {
   );
 };
 
-const ScoresState = ({ scores }) => {
+const ScoresState = ({ scores, count }) => {
   return (
     <ul className="max-w-[600px] w-full p-8">
       {scores.map((student, index) => {
         return (
           <li
             key={student.id}
-            className="p-8 mb-4 last:mb-0 flex bg-white rounded-lg"
+            className="p-8 mb-4 last:mb-0 flex items-center bg-white rounded-lg shadow-sm"
           >
-            <span>{index + 1}</span>
+            <span className="w-12 h-12 flex justify-center items-center rounded-full bg-amber-200 text-amber-600 text-xl font-bold">
+              {index + 1}
+            </span>
             <span className="mx-8 flex-grow truncate">{student.name}</span>
-            <span>{student.score}</span>
+            <span>
+              {student.score}/{count}
+            </span>
           </li>
         );
       })}
@@ -169,7 +173,6 @@ const QuizController = () => {
           answers[uid] = {};
         }
         answers[uid][qid] = aid;
-        console.log(answers);
         return { ...answers };
       });
     });
@@ -210,17 +213,13 @@ const QuizController = () => {
       content = <QuestionState question={questions[index]} />;
       break;
     case "scores":
-      content = <ScoresState scores={scores} />;
+      content = <ScoresState scores={scores} count={questions.length} />;
       break;
   }
 
   return (
     <>
-      <Navbar>
-        <button className="px-6 flex flex-shrink-0 items-center rounded-md text-white text-sm bg-sky-500">
-          下一题
-        </button>
-      </Navbar>
+      <Navbar />
       <main className="pt-20 h-screen flex bg-slate-50">
         <StudentList students={students} />
         <section className="flex-grow flex flex-col items-center overflow-auto">

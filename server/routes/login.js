@@ -6,7 +6,7 @@ const Codes = require("../common/codes");
 
 const router = express.Router();
 
-const TOKEN_EXPIRE_TIME = 3000;
+const TOKEN_EXPIRE_TIME = 60 * 60 * 24;
 
 router.post("/", async (req, res) => {
   const { username, password } = req.body;
@@ -32,6 +32,7 @@ router.post("/", async (req, res) => {
       }
     }
   } catch (err) {
+    console.log(err.message);
     return res.json({ message: "Unknown error" });
   }
 });

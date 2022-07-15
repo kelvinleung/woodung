@@ -41,7 +41,7 @@ const QuestionList = ({
       </ul>
       <div className="px-4">
         <button
-          className="p-4 w-full block bg-sky-500 text-white rounded-md"
+          className="p-4 w-full block bg-sky-500 text-white text-sm rounded-md"
           onClick={onAddQuestion}
         >
           添加问题

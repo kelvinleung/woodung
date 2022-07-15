@@ -1,4 +1,5 @@
 const { randomUUID } = require("crypto");
+const dataStore = require("../common/dataStore");
 
 const sessionMiddleware = (socket, next) => {
   // 判断用户角色
@@ -16,15 +17,16 @@ const sessionMiddleware = (socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
     // “老”用户
     if (sessionId) {
-      const session = sessionStore.findSession(sessionId);
+      const session = dataStore.findSession(sessionId);
       if (session) {
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
-        socket.role = session.role;
+        socket.role = role;
         return next();
       }
     }
+
     // “新”用户
     const { username } = socket.handshake.auth;
     // teacher 没有 username
