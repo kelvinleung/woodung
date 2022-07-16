@@ -10,3 +10,4 @@ export const API_CREATE_QUIZ_URL = "/api/v1/quiz/create";
 export const API_UPDATE_QUIZ_URL = "/api/v1/quiz/update";
 export const API_GET_QUIZ_URL = "/quiz";
 export const API_GET_QUIZZES_URL = "/quiz/all";
+export const API_GET_ROOM_URL = "/room";

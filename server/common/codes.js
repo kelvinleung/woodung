@@ -83,4 +83,15 @@ const Quiz = {
   },
 };
 
-module.exports = { Register, Login, Quiz };
+const Room = {
+  GET_ROOM_BY_ID_SUCCESS: {
+    code: 0,
+    message: "OK",
+  },
+  GET_ROOM_BY_ID_NOT_FOUND: {
+    code: 4001,
+    message: "Room not found.",
+  },
+};
+
+module.exports = { Register, Login, Quiz, Room };

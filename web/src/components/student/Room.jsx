@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
+import request from "../../common/api";
+import { useToast } from "../../hooks/useToast";
+import { API_GET_ROOM_URL } from "../../common/constants";
 
 const ROOM_SESSION_KEY = "woodong_room_session";
 
@@ -63,6 +66,7 @@ const Room = () => {
   const [currentState, setCurrentState] = useState("waiting");
   const [sessionId, setSessionId] = useState(null);
   const { rid: roomId } = useParams();
+  const { toast } = useToast();
 
   const getSession = () => {
     const session = JSON.parse(localStorage.getItem(ROOM_SESSION_KEY));
@@ -72,13 +76,22 @@ const Room = () => {
     }
   };
 
+  const getRoomInfo = async () => {
+    try {
+      await request.get(API_GET_ROOM_URL);
+    } catch (err) {
+      toast(err.message);
+    }
+  };
+
   useEffect(() => {
+    getRoomInfo();
     getSession();
 
     const socketIO = io({ autoConnect: false });
 
     socketIO.on("connect", () => {
-      console.log(socketIO.connected);
+      toast("连接成功");
     });
 
     socketIO.on("new_question", (q) => {
@@ -87,11 +100,15 @@ const Room = () => {
     });
 
     socketIO.on("disconnect", () => {
-      alert("连接已断开");
+      toast("连接已断开");
+    });
+
+    socketIO.on("connect_error", (err) => {
+      toast(err.message);
     });
 
     socketIO.on("error", (err) => {
-      console.log(err);
+      toast(err.message);
     });
 
     setSocket(socketIO);
@@ -109,7 +126,7 @@ const Room = () => {
     socket.emit("join_room", roomId, (response) => {
       if (response.code !== 0) {
         socket.disconnect();
-        alert(response.message);
+        toast(response.message);
       } else {
         if (sessionId === null) {
           localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify(response.data));

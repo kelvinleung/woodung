@@ -19,6 +19,10 @@ class DataStore {
     return null;
   }
 
+  isRoomValid(rid) {
+    return this.rooms.has(rid);
+  }
+
   saveRoom(rid, tid) {
     this.rooms.set(rid, tid);
   }
