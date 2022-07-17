@@ -12,7 +12,10 @@ request.interceptors.response.use(
     return Promise.reject(response.data);
   },
   (error) => {
-    return Promise.reject(error);
+    return Promise.reject({
+      code: error.response.status,
+      message: error.message,
+    });
   }
 );
 

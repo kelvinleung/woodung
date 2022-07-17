@@ -5,6 +5,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import Navbar from "./Navbar";
 import request from "../../common/api";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 import { API_GET_QUIZ_URL } from "../../common/constants";
 
 const ROOM_BASE_URL = "http://192.168.0.107:3000/room";
@@ -87,6 +88,7 @@ const QuizController = () => {
   // TODO: 计算得分
   const [answers, setAnswers] = useState({});
   const { user } = useAuth();
+  const { toast } = useToast();
   const { id: qid } = useParams();
 
   const getQuizById = async () => {
@@ -133,7 +135,7 @@ const QuizController = () => {
 
     // 连接状态
     socketIO.on("connect", () => {
-      console.log(socketIO.connected);
+      toast.success("连接成功");
     });
 
     socketIO.on("room_info", (roomId) => {

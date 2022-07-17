@@ -80,7 +80,7 @@ const Room = () => {
     try {
       await request.get(API_GET_ROOM_URL);
     } catch (err) {
-      toast(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -91,7 +91,7 @@ const Room = () => {
     const socketIO = io({ autoConnect: false });
 
     socketIO.on("connect", () => {
-      toast("连接成功");
+      toast.success("连接成功");
     });
 
     socketIO.on("new_question", (q) => {
@@ -100,15 +100,15 @@ const Room = () => {
     });
 
     socketIO.on("disconnect", () => {
-      toast("连接已断开");
+      toast.error("连接已断开");
     });
 
     socketIO.on("connect_error", (err) => {
-      toast(err.message);
+      toast.error(err.message);
     });
 
     socketIO.on("error", (err) => {
-      toast(err.message);
+      toast.error(err.message);
     });
 
     setSocket(socketIO);
@@ -126,7 +126,7 @@ const Room = () => {
     socket.emit("join_room", roomId, (response) => {
       if (response.code !== 0) {
         socket.disconnect();
-        toast(response.message);
+        toast.error(response.message);
       } else {
         if (sessionId === null) {
           localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify(response.data));
