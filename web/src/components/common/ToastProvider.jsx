@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { ToastContext } from "../../hooks/useToast";
 
@@ -18,12 +17,44 @@ const TOAST_STYLE = {
   },
 };
 
-const Toast = ({ id, message, duration, onHide }) => {
+const Toast = ({ id, message, duration, type, onHide }) => {
   useEffect(() => {
     const timer = setTimeout(() => onHide(id), duration);
     return () => clearTimeout(timer);
   }, []);
-  return <div>{message}</div>;
+  return (
+    <div
+      className={`px-8 py-4 mb-4 last:mb-0 rounded-md shadow-sm ${TOAST_STYLE[type].bgColor} ${TOAST_STYLE[type].textColor}`}
+    >
+      {message}
+    </div>
+  );
+};
+
+const ToastContainer = ({ toasts, onHide }) => {
+  return (
+    <TransitionGroup
+      component="ul"
+      className="fixed top-0 right-0 p-8 flex flex-col items-end"
+    >
+      {toasts.map((toast) => {
+        const { id, type, message, duration } = toast;
+        return (
+          <CSSTransition key={id} timeout={300} classNames="toast">
+            <li>
+              <Toast
+                id={id}
+                message={message}
+                duration={duration}
+                type={type}
+                onHide={onHide}
+              />
+            </li>
+          </CSSTransition>
+        );
+      })}
+    </TransitionGroup>
+  );
 };
 
 let toastCount = 0;
@@ -31,42 +62,52 @@ let toastCount = 0;
 const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const toast = (message, config = {}, type = "info") => {
-    if (!message) return;
-    const duration = config.duration || 3000;
-    const toast = { id: ++toastCount, message, duration, type };
+  const addToast = (message, duration, onHideHandler, type) => {
+    const toast = {
+      id: ++toastCount,
+      message,
+      duration,
+      onHideHandler,
+      type,
+    };
     setToasts((toasts) => [...toasts, toast]);
+  };
+
+  const toast = (message, config = {}, onHideHandler, type = "info") => {
+    if (!message) return;
+    if (typeof config === "function") {
+      onHideHandler = config;
+      config = {};
+    }
+    const duration = config.duration || 3000;
+    addToast(message, duration, onHideHandler, type);
   };
 
   // toast.info 调用
   ["info", "error", "success"].forEach((type) => {
-    toast[type] = (message, config) => {
-      toast(message, config, type);
+    toast[type] = (message, config, onHideHandler) => {
+      toast(message, config, onHideHandler, type);
     };
   });
+
   const removeToast = (id) => {
-    setToasts((toasts) => toasts.filter((toast) => toast.id !== id));
+    setToasts((toasts) =>
+      toasts.filter((toast) => {
+        if (toast.id === id) {
+          if (typeof toast.onHideHandler === "function") {
+            toast.onHideHandler();
+          }
+          return false;
+        }
+        return true;
+      })
+    );
   };
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <TransitionGroup
-        component="ul"
-        className="fixed top-0 right-0 p-8 flex flex-col items-end"
-      >
-        {toasts.map((toast) => (
-          <CSSTransition key={toast.id} timeout={300} classNames="toast">
-            <li
-              className={`px-8 py-4 mb-4 last:mb-0 rounded-md shadow-sm ${
-                TOAST_STYLE[toast.type].bgColor
-              } ${TOAST_STYLE[toast.type].textColor}`}
-            >
-              <Toast {...toast} onHide={removeToast} />
-            </li>
-          </CSSTransition>
-        ))}
-      </TransitionGroup>
+      <ToastContainer toasts={toasts} onHide={removeToast} />
     </ToastContext.Provider>
   );
 };
