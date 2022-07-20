@@ -33,7 +33,10 @@ const configureSocket = (server) => {
       let roomId = dataStore.findRoomId(userId);
       if (!roomId) {
         roomId = randomBytes(4).toString("hex").toUpperCase();
-        dataStore.saveRoom(roomId, userId);
+        dataStore.saveRoom(roomId, {
+          tid: userId,
+          createdAt: Date.now(),
+        });
       }
 
       // 创建房间
@@ -43,7 +46,17 @@ const configureSocket = (server) => {
 
       // 出题
       socket.on("question", (question) => {
-        socket.to(roomId).emit("new_question", question);
+        socket.to(roomId).emit("question", question);
+      });
+
+      // 分数
+      socket.on("scores", (scores) => {
+        socket.to(roomId).emit("scores", scores);
+      });
+
+      // 恢复房间状态
+      socket.on("resume_room_state", (studentId, data) => {
+        socket.to(studentId).emit("resume_room_state", data);
       });
     }
 
@@ -57,7 +70,8 @@ const configureSocket = (server) => {
       // 加入房间
       socket.on("join_room", (roomId, callback) => {
         // 判断房间是否存在
-        if (!dataStore.findTeacherId(roomId)) {
+        const room = dataStore.findRoom(roomId);
+        if (!room) {
           callback({ code: 1000, message: "Room not found." });
           return;
         }
@@ -77,8 +91,12 @@ const configureSocket = (server) => {
           .to(roomId)
           .emit("student_join_room", { id: userId, name: username });
 
-        // 返回 sessionId
-        callback({ code: 0, message: "OK.", data: { sessionId, username } });
+        // 返回 session
+        callback({
+          code: 0,
+          message: "OK.",
+          data: { sessionId, username, roomId },
+        });
       });
 
       // 答题

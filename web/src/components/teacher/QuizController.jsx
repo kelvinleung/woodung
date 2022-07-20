@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { QRCodeCanvas } from "qrcode.react";
@@ -12,7 +12,7 @@ const ROOM_BASE_URL = "http://192.168.0.107:3000/room";
 
 const StudentList = ({ students }) => {
   return (
-    <aside className="w-64 p-4 shrink-0 overflow-auto bg-white">
+    <aside className="w-64 p-4 shrink-0 overflow-auto bg-white shadow-sm">
       <ul>
         {students.map((student) => (
           <li
@@ -54,7 +54,8 @@ const QuestionState = ({ question }) => {
   );
 };
 
-const ScoresState = ({ scores, count }) => {
+const ScoresState = ({ data }) => {
+  const { scores, count } = data;
   return (
     <ul className="max-w-[600px] w-full p-8">
       {scores.map((student, index) => {
@@ -78,18 +79,21 @@ const ScoresState = ({ scores, count }) => {
 };
 
 const QuizController = () => {
-  const [socket, setSocket] = useState(null);
   const [students, setStudents] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(-1);
   const [roomId, setRoomId] = useState();
   const [scores, setScores] = useState(null);
-  const [currentState, setCurrentState] = useState("qrcode");
+  const [currentState, setCurrentState] = useState("waiting");
+  // Refs
+  const socketRef = useRef(null);
   // TODO: 计算得分
   const [answers, setAnswers] = useState({});
   const { user } = useAuth();
   const { toast } = useToast();
   const { id: qid } = useParams();
+
+  const currentQuestion = questions[index];
 
   const getQuizById = async () => {
     const response = await request.get(API_GET_QUIZ_URL, {
@@ -129,21 +133,74 @@ const QuizController = () => {
   useEffect(() => {
     getQuizById();
 
-    const socketIO = io({ autoConnect: false });
+    socketRef.current = io({ autoConnect: false });
 
-    socketIO.auth = { userId: user.id, role: "teacher" };
+    socketRef.current.auth = { userId: user.id, role: "teacher" };
 
     // 连接状态
-    socketIO.on("connect", () => {
+    socketRef.current.on("connect", () => {
       toast.success("连接成功");
     });
 
-    socketIO.on("room_info", (roomId) => {
+    socketRef.current.on("room_info", (roomId) => {
       setRoomId(roomId);
+      // DEBUG: 方便连接测试
+      console.log(`${ROOM_BASE_URL}/${roomId}`);
     });
 
+    // 学生离开房间
+    socketRef.current.on("student_leave_room", (id) => {
+      setStudents((students) =>
+        students.map((student) => {
+          if (student.id === id) {
+            student.connected = false;
+          }
+          return student;
+        })
+      );
+    });
+
+    // 学生答题
+    socketRef.current.on("student_answer", ({ qid, aid, uid }) => {
+      setAnswers((answers) => {
+        if (!answers[uid]) {
+          answers[uid] = {};
+        }
+        answers[uid][qid] = aid;
+        return { ...answers };
+      });
+    });
+
+    socketRef.current.connect();
+
+    // 清除监听，断开连接
+    return () => {
+      socketRef.current.off("connect");
+      socketRef.current.off("room_info");
+      socketRef.current.off("student_leave_room");
+      socketRef.current.off("student_answer");
+      socketRef.current.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     // 学生加入房间
-    socketIO.on("student_join_room", (student) => {
+    socketRef.current.on("student_join_room", (student) => {
+      // 判断当前状态，发送恢复数据
+      switch (currentState) {
+        case "question":
+          // TODO: 判断当前题目已答
+          socketRef.current.emit("resume_room_state", student.id, {
+            state: "question",
+            data: currentQuestion,
+          });
+          break;
+        case "scores":
+          socketRef.current.emit("resume_room_state", student.id, {
+            state: "scores",
+            data: scores,
+          });
+      }
       setStudents((students) => {
         const index = students.findIndex((s) => s.id === student.id);
         if (index === -1) {
@@ -156,47 +213,22 @@ const QuizController = () => {
       });
     });
 
-    // 学生离开房间
-    socketIO.on("student_leave_room", (id) => {
-      setStudents((students) =>
-        students.map((student) => {
-          if (student.id === id) {
-            student.connected = false;
-          }
-          return student;
-        })
-      );
-    });
-
-    // 学生答题
-    socketIO.on("student_answer", ({ qid, aid, uid }) => {
-      setAnswers((answers) => {
-        if (!answers[uid]) {
-          answers[uid] = {};
-        }
-        answers[uid][qid] = aid;
-        return { ...answers };
-      });
-    });
-
-    socketIO.connect();
-
-    setSocket(socketIO);
-
-    // 断开连接
-    return () => socketIO.disconnect();
-  }, []);
+    return () => {
+      socketRef.current.off("student_join_room");
+    };
+  }, [currentState, currentQuestion, scores]);
 
   const step = () => {
     const nextIndex = index + 1;
     if (nextIndex >= questions.length) {
-      const scores = calculateScores();
+      const scores = { scores: calculateScores(), count: questions.length };
+      socketRef.current.emit("scores", scores);
       setScores(scores);
       setCurrentState("scores");
       return;
     }
     const nextQuestion = questions[nextIndex];
-    socket.emit("question", nextQuestion);
+    socketRef.current.emit("question", nextQuestion);
     setIndex(nextIndex);
     setCurrentState("question");
   };
@@ -204,7 +236,7 @@ const QuizController = () => {
   let content;
 
   switch (currentState) {
-    case "qrcode":
+    case "waiting":
       content = (
         <div className="flex-grow flex justify-center items-center">
           <QRCodeCanvas value={`${ROOM_BASE_URL}/${roomId}`} size={300} />
@@ -212,10 +244,10 @@ const QuizController = () => {
       );
       break;
     case "question":
-      content = <QuestionState question={questions[index]} />;
+      content = <QuestionState question={currentQuestion} />;
       break;
     case "scores":
-      content = <ScoresState scores={scores} count={questions.length} />;
+      content = <ScoresState data={scores} />;
       break;
   }
 
@@ -231,7 +263,7 @@ const QuizController = () => {
               className="w-80 py-4 mt-8 mb-16  rounded-md text-white text-lg bg-sky-500"
               onClick={step}
             >
-              {currentState === "qrcode" ? "开始游戏" : "下一题"}
+              {currentState === "waiting" ? "开始游戏" : "下一题"}
             </button>
           )}
         </section>

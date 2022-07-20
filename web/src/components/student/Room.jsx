@@ -9,7 +9,7 @@ const ROOM_SESSION_KEY = "woodong_room_session";
 
 const WaitingState = ({ username, onNameChange, onJoin }) => {
   return (
-    <div className="max-w-[640px] h-screen m-auto p-8 flex flex-col">
+    <div className="h-full p-4">
       <p className="h-1/2 flex justify-center items-center text-slate-500 text-3xl font-bold">
         W<span className="text-[#de1a35]">O</span>
         <span className="text-[#d29400]">O</span>
@@ -37,24 +37,56 @@ const WaitingState = ({ username, onNameChange, onJoin }) => {
 
 const QuestionState = ({ question, onAnswer }) => {
   return (
-    <ul className="max-w-[640px] min-h-screen m-auto p-8 grid grid-cols-2 gap-4">
-      {question.options.map((option) => (
-        <li key={option.id}>
-          <button
-            className="w-full h-full block rounded-md"
-            style={{ backgroundColor: option.color }}
-            onClick={() => onAnswer({ qid: question.id, aid: option.id })}
-          ></button>
-        </li>
-      ))}
-    </ul>
+    <div className="h-full p-4">
+      <p className="h-1/2 p-4 flex justify-center items-center text-center text-xl">
+        {question.description}
+      </p>
+      <ul className="h-1/2 flex-grow grid grid-cols-2 gap-4">
+        {question.options.map((option) => (
+          <li key={option.id}>
+            <button
+              className="w-full h-full p-4 block rounded-md text-white"
+              style={{ backgroundColor: option.color }}
+              onClick={() => onAnswer({ qid: question.id, aid: option.id })}
+            >
+              {option.text}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const ScoresState = ({ scores, count }) => {
+  return (
+    <div className="h-full p-4 bg-slate-50">
+      <ul>
+        {scores.map((student, index) => {
+          return (
+            <li
+              key={student.id}
+              className="p-8 mb-4 last:mb-0 flex items-center bg-white rounded-lg shadow-sm"
+            >
+              <span className="w-12 h-12 flex justify-center items-center rounded-full bg-amber-200 text-amber-600 text-xl font-bold">
+                {index + 1}
+              </span>
+              <span className="mx-8 flex-grow truncate">{student.name}</span>
+              <span>
+                {student.score}/{count}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 };
 
 const MessageState = () => {
   return (
-    <div className="max-w-[640px] h-screen m-auto p-8 flex flex-col justify-center items-center text-3xl text-sky-500 font-bold">
-      <p>请耐心等待……</p>
+    <div className="h-full p-4 flex flex-col justify-center items-center">
+      <p className="text-3xl text-sky-500 font-bold">请耐心等待……</p>
     </div>
   );
 };
@@ -63,22 +95,30 @@ const Room = () => {
   const [name, setName] = useState("");
   const [socket, setSocket] = useState(null);
   const [question, setQuestion] = useState(null);
+  const [scores, setScores] = useState(null);
   const [currentState, setCurrentState] = useState("waiting");
-  const [sessionId, setSessionId] = useState(null);
+  const [session, setSession] = useState(null);
   const { rid: roomId } = useParams();
   const { toast } = useToast();
 
   const getSession = () => {
-    const session = JSON.parse(localStorage.getItem(ROOM_SESSION_KEY));
-    if (session) {
-      setSessionId(session.sessionId);
-      setName(session.username);
+    // 读取本地缓存的 session
+    const localSession = JSON.parse(localStorage.getItem(ROOM_SESSION_KEY));
+    if (localSession) {
+      // 判断缓存 session 的 roomId 是否一致
+      if (localSession.roomId === roomId) {
+        setSession(localSession);
+        setName(localSession.username);
+      } else {
+        // 不一致则清楚本地缓存
+        localStorage.removeItem(ROOM_SESSION_KEY);
+      }
     }
   };
 
   const getRoomInfo = async () => {
     try {
-      await request.get(API_GET_ROOM_URL);
+      await request.get(API_GET_ROOM_URL, { params: { roomId } });
     } catch (err) {
       toast.error(err.message);
     }
@@ -94,9 +134,14 @@ const Room = () => {
       toast.success("连接成功");
     });
 
-    socketIO.on("new_question", (q) => {
-      setQuestion(q);
+    socketIO.on("question", (question) => {
+      setQuestion(question);
       setCurrentState("question");
+    });
+
+    socketIO.on("scores", (scores) => {
+      setScores(scores);
+      setCurrentState("scores");
     });
 
     socketIO.on("disconnect", () => {
@@ -107,8 +152,17 @@ const Room = () => {
       toast.error(err.message);
     });
 
-    socketIO.on("error", (err) => {
-      toast.error(err.message);
+    // 恢复状态
+    socketIO.on("resume_room_state", ({ state, data }) => {
+      switch (state) {
+        case "question":
+          setQuestion(data);
+          setCurrentState(state);
+          break;
+        case "scores":
+          setScores(data);
+          setCurrentState(state);
+      }
     });
 
     setSocket(socketIO);
@@ -117,21 +171,22 @@ const Room = () => {
   }, []);
 
   const joinRoom = () => {
-    if (sessionId) {
-      socket.auth = { sessionId, role: "student" };
+    if (session) {
+      socket.auth = { sessionId: session.sessionId, role: "student" };
     } else {
       socket.auth = { username: name, role: "student" };
     }
+
     socket.connect();
+
     socket.emit("join_room", roomId, (response) => {
       if (response.code !== 0) {
         socket.disconnect();
         toast.error(response.message);
       } else {
-        if (sessionId === null) {
-          localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify(response.data));
-          setSessionId(response.data.sessionId);
-        }
+        // 刷新本地缓存
+        localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify(response.data));
+        setSession(response.data);
         setCurrentState("message");
       }
     });
@@ -142,20 +197,29 @@ const Room = () => {
     setCurrentState("message");
   };
 
+  let content;
+
   switch (currentState) {
     case "waiting":
-      return (
+      content = (
         <WaitingState
           username={name}
           onNameChange={setName}
           onJoin={joinRoom}
         />
       );
+      break;
     case "question":
-      return <QuestionState question={question} onAnswer={answerQuestion} />;
+      content = <QuestionState question={question} onAnswer={answerQuestion} />;
+      break;
+    case "scores":
+      content = <ScoresState scores={scores.scores} count={scores.count} />;
+      break;
     case "message":
-      return <MessageState />;
+      content = <MessageState />;
   }
+
+  return <div className="max-w-[640px] h-screen m-auto">{content}</div>;
 };
 
 export default Room;

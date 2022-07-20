@@ -6,7 +6,7 @@ class DataStore {
 
   // rooms
 
-  findTeacherId(rid) {
+  findRoom(rid) {
     return this.rooms.get(rid);
   }
 
@@ -23,8 +23,8 @@ class DataStore {
     return this.rooms.has(rid);
   }
 
-  saveRoom(rid, tid) {
-    this.rooms.set(rid, tid);
+  saveRoom(rid, room) {
+    this.rooms.set(rid, room);
   }
 
   // sessions

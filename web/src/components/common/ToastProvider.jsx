@@ -24,7 +24,7 @@ const Toast = ({ id, message, duration, type, onHide }) => {
   }, []);
   return (
     <div
-      className={`px-8 py-4 mb-4 last:mb-0 rounded-md shadow-sm ${TOAST_STYLE[type].bgColor} ${TOAST_STYLE[type].textColor}`}
+      className={`px-8 py-4 rounded-md shadow-sm ${TOAST_STYLE[type].bgColor} ${TOAST_STYLE[type].textColor}`}
     >
       {message}
     </div>
@@ -41,7 +41,7 @@ const ToastContainer = ({ toasts, onHide }) => {
         const { id, type, message, duration } = toast;
         return (
           <CSSTransition key={id} timeout={300} classNames="toast">
-            <li>
+            <li className="mb-4 last:mb-0">
               <Toast
                 id={id}
                 message={message}

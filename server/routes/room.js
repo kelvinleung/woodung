@@ -5,8 +5,8 @@ const Codes = require("../common/codes");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const { id } = req.query;
-  const isValid = dataStore.isRoomValid(id);
+  const { roomId } = req.query;
+  const isValid = dataStore.isRoomValid(roomId);
   if (isValid) {
     return res.json({ ...Codes.Room.GET_ROOM_BY_ID_SUCCESS });
   }
