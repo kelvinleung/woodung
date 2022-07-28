@@ -87,8 +87,8 @@ const QuizController = () => {
   const [currentState, setCurrentState] = useState("waiting");
   // Refs
   const socketRef = useRef(null);
-  // TODO: 计算得分
-  const [answers, setAnswers] = useState({});
+  const answersRef = useRef({});
+
   const { user } = useAuth();
   const { toast } = useToast();
   const { id: qid } = useParams();
@@ -112,7 +112,7 @@ const QuizController = () => {
       .map((student) => {
         const { id, name } = student;
         let score = 0;
-        const studentAnswers = answers[student.id];
+        const studentAnswers = answersRef.current[student.id];
         if (!studentAnswers) {
           return { id, name, score: 0 };
         }
@@ -162,13 +162,10 @@ const QuizController = () => {
 
     // 学生答题
     socketRef.current.on("student_answer", ({ qid, aid, uid }) => {
-      setAnswers((answers) => {
-        if (!answers[uid]) {
-          answers[uid] = {};
-        }
-        answers[uid][qid] = aid;
-        return { ...answers };
-      });
+      if (!answersRef.current[uid]) {
+        answersRef.current[uid] = {};
+      }
+      answersRef.current[uid][qid] = aid;
     });
 
     socketRef.current.connect();
@@ -189,7 +186,12 @@ const QuizController = () => {
       // 判断当前状态，发送恢复数据
       switch (currentState) {
         case "question":
-          // TODO: 判断当前题目已答
+          // 判断当前题目已答
+          const studentAnswers = answersRef.current[student.id];
+          if (studentAnswers) {
+            const currentQuestionAnswer = studentAnswers[currentQuestion.id];
+            if (currentQuestionAnswer !== undefined) break;
+          }
           socketRef.current.emit("resume_room_state", student.id, {
             state: "question",
             data: currentQuestion,
