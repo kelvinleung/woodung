@@ -32,7 +32,7 @@ const QuizEditor = () => {
   const { user } = useAuth();
   const { id: editId } = useParams();
 
-  async function getQuizById() {
+  const getQuizById = async () => {
     const response = await request.get(API_GET_QUIZ_URL, {
       headers: { Authorization: `Bearer ${user.token}` },
       params: { id: editId },
@@ -40,7 +40,7 @@ const QuizEditor = () => {
     const { name, content } = response.data.quiz;
     setName(name);
     setQuestions(content);
-  }
+  };
 
   useEffect(() => {
     if (editId) {
