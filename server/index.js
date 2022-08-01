@@ -4,6 +4,10 @@ const http = require("http");
 const configureSocket = require("./socket");
 const routes = require("./routes");
 
+// 开发环境同步数据库使用
+// const sequelize = require("./common/db");
+// sequelize.sync().then(() => console.log("db ok"));
+
 const app = express();
 const server = http.createServer(app);
 
